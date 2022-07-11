@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import './App.css';
 
 const products = [
@@ -11,28 +12,82 @@ const products = [
   { category: "Vegetables", price: "$1", stocked: true, name: "Peas" }
 ];
 
-const productCategories = [...new Set(products.map(product => product.category))];
-
 console.log(products);
-console.log(productCategories);
+//console.log(productCategories);
 
-function ProductsTable() {
+function ProductsTable({ products }) {
+  const [filterText, setFilterText] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+
+  if (inStockOnly) {
+    products = products.filter(value => value.stocked === true);
+  }
+
+  if (filterText) {
+    products = products.filter(value => value.name.toLowerCase().indexOf(filterText.toLowerCase()) !== -1);
+  }
+
+  const productCategories = [...new Set(products.map(product => product.category))];
+
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Price</th>
-        </tr>
-      </thead>
-      <tbody>
-        <TableCategories/>
-      </tbody>
-    </table>
+    <div className="table-cont">
+      <TableFilter 
+        filterText={filterText} 
+        inStockOnly={inStockOnly} 
+        onFilterTextChange={setFilterText}
+        onInStockOnlyChange={setInStockOnly} />
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <CategoriesRow products={products} productCategories={productCategories}/>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function TableProducts({productCategory}) {
+function TableFilter({filterText, inStockOnly, onFilterTextChange, onInStockOnlyChange}) {
+  return (
+    <form className="table-filter">
+      <input 
+        type="text" 
+        value={filterText} 
+        placeholder="Search..."
+        onChange={(e) => onFilterTextChange(e.target.value)} />
+      <label>
+        <input type="checkbox" checked={inStockOnly} onChange={(e) => onInStockOnlyChange(e.target.checked)}/>
+        Only show products in stock
+      </label>
+    </form>
+  )
+}
+
+function CategoriesRow({productCategories, products}) {
+  const tableCategories = productCategories.map(category => {
+    console.log(category);
+    
+    return (
+      <React.Fragment key={category}>
+        <tr>
+          <th className="fullwidth" colSpan="2">{category}</th>
+        </tr>
+        <ProductRows productCategory={category} products={products}/>
+      </React.Fragment>
+    );
+  });
+  console.log(tableCategories);
+
+  return (
+    <>{tableCategories}</>
+  );
+}
+
+function ProductRows({productCategory, products}) {
 
   console.log(productCategory);
   const productsArray = [];
@@ -54,31 +109,10 @@ function TableProducts({productCategory}) {
   );
 }
 
-function TableCategories() {
-  //const products = productCategories.forEach(category => <TableProducts productCategory="{category}"/>);
-  const tableCategories = productCategories.map(category => {
-    console.log(category);
-    
-    return (
-      <React.Fragment key={category}>
-        <tr>
-          <th className="fullwidth" colSpan="2">{category}</th>
-        </tr>
-        <TableProducts productCategory={category}/>
-      </React.Fragment>
-    );
-  });
-  console.log(tableCategories);
-
-  return (
-    <>{tableCategories}</>
-  );
-}
-
 function App() {
   return (
     <div className="App">
-      <ProductsTable/>
+      <ProductsTable products={products}/>
     </div>
   );
 }
